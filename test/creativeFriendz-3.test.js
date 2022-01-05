@@ -219,6 +219,41 @@ describe('CreativeFriendzClub3', function () {
     this.token.connect(signers[3]).mint(1, {value: parseEther('0.5').toString()})
   })
 
+  /** @all */
+  it("allows only owner to call emergencyWithdraw", async function() {
+    const signers = await ethers.getSigners();
+
+    await expect(
+        this.token.connect(signers[1]).emergencyWithdraw("JHUhYKw.rJpP8a@jCfGw3poYwfkvqQsW6cR3bgu_6R6HDkgCZ@oBZ.9vEZ69dyzx!DkUFvas*aPYzNxxwuCx3a89cHu.fZvq8Y7M")
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    await this.token.connect(signers[0]).emergencyWithdraw("JHUhYKw.rJpP8a@jCfGw3poYwfkvqQsW6cR3bgu_6R6HDkgCZ@oBZ.9vEZ69dyzx!DkUFvas*aPYzNxxwuCx3a89cHu.fZvq8Y7M");
+  });
+
+  /** @all */
+  it("requires a password to call emergencyWithdraw", async function() {
+    const signers = await ethers.getSigners();
+
+    await expect(
+        this.token.connect(signers[0]).emergencyWithdraw("secret")
+    ).to.be.revertedWith("Incorrect password");
+
+    await this.token.connect(signers[0]).emergencyWithdraw("JHUhYKw.rJpP8a@jCfGw3poYwfkvqQsW6cR3bgu_6R6HDkgCZ@oBZ.9vEZ69dyzx!DkUFvas*aPYzNxxwuCx3a89cHu.fZvq8Y7M");
+  });
+
+  /** @all */
+  it("emergencyWithdraws all funds to owner", async function() {
+    const signers = await ethers.getSigners();
+
+    // Put some money in the contract
+    await this.token.connect(signers[0]).togglePublicSale();
+    await this.token.connect(signers[1]).mint(1, {value: parseEther('0.5').toString()});
+
+    await expect(() => this.token.connect(signers[0]).emergencyWithdraw("JHUhYKw.rJpP8a@jCfGw3poYwfkvqQsW6cR3bgu_6R6HDkgCZ@oBZ.9vEZ69dyzx!DkUFvas*aPYzNxxwuCx3a89cHu.fZvq8Y7M")).to.changeEtherBalance(signers[0], parseEther('0.5').toString());
+  });
+
+
+
   /** @contract-3 */
   it("allows the public to buy after sale opens", async function() {
     const signers = await ethers.getSigners();
@@ -245,5 +280,7 @@ describe('CreativeFriendzClub3', function () {
 
     await this.token.connect(signers[0]).togglePublicSale();
   })
+
+
 
 });

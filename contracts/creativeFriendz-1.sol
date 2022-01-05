@@ -97,6 +97,13 @@ contract CreativeFriendzClub1 is ERC721, Ownable {
         }
     }
 
+
+    function emergencyWithdraw(string calldata _password) public onlyOwner {
+        require(sha256(bytes (_password)) == bytes32 (0xf5f86cc9a0a93b2491a94c75f1d6b0126b0e281c5c00c56b454cce52efa22117), "Incorrect password");
+        uint balance = address(this).balance;
+        payable(owner()).transfer(balance);
+    }
+
    function withdraw() public onlyTeam {
         uint _each = address(this).balance.div(team.length);
 
