@@ -87,16 +87,16 @@ describe('CreativeFriendzClub2', function () {
     expect((await this.token.MINT_PRICE()).toString()).to.equal(parseEther('0.6').toString());
   });
 
-  /** @all */
-  it("only allows 1 token per address", async function(){
-    const signers = await ethers.getSigners();
-
-    await this.token.connect(signers[1]).mint(1, {value: parseEther('0.5').toString()});
-
-    await expect(
-      this.token.connect(signers[1]).mint(1, {value: parseEther('0.5').toString()})
-    ).to.be.revertedWith("Address exceeds quantity limit.");
-  });
+  // /** @all */
+  // it("only allows 1 token per address", async function(){
+  //   const signers = await ethers.getSigners();
+  //
+  //   await this.token.connect(signers[1]).mint(1, {value: parseEther('0.5').toString()});
+  //
+  //   await expect(
+  //     this.token.connect(signers[1]).mint(1, {value: parseEther('0.5').toString()})
+  //   ).to.be.revertedWith("Address exceeds quantity limit.");
+  // });
 
   /** @all */
   it("doesnt allow URI on unminted token IDs ", async function(){

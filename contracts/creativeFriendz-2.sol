@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./RandomNumberConsumer.sol";
 
 
 contract CreativeFriendzClub2 is ERC721, Ownable {
@@ -13,22 +14,21 @@ contract CreativeFriendzClub2 is ERC721, Ownable {
 
     Counters.Counter private _tokenIdCounter;
 
-    uint public constant MAX_MINT_QUANTITY = 1;
-    uint public constant MAX_ADDRESS_QUANTITY = 1;
-
-
-    uint256 public MINT_PRICE = 0.5 ether;
-    uint256 public MAX_SUPPLY = 1000;
+    uint128 public constant MAX_MINT_QUANTITY = 5;
+    uint128 public constant MAX_SUPPLY = 1000;
+    uint256 public constant MINT_PRICE = 0.066 ether;
 
     bool public isRevealed = false;
     bool public publicSale = false;
     string public provenanceHash = "";
     address[] public team;
     mapping(address => bool) public whitelist;
-    string  private baseURI;
-    string  private notRevealedUri;
+    string private baseURI;
+    string private notRevealedUri;
 
-    constructor(string memory _baseURI, address[] memory _team, address[] memory _whiteList) ERC721("Creative Friendz Club", "TCFC") {
+    uint256 private raffleAmount = 0;
+
+    constructor(string memory _baseURI, address[] memory _team, address[] memory _whiteList) ERC721("Boom Babies", "BABIES") {
         setBaseURI(_baseURI);
         team = _team;
 
@@ -41,6 +41,10 @@ contract CreativeFriendzClub2 is ERC721, Ownable {
         for(uint i = 0; i < team.length; i++){
             safeMint(team[i]);
         }
+    }
+
+    function totalSupply() public view virtual returns (uint256 memory) {
+        return _tokenIdCounter.current();
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
@@ -58,19 +62,29 @@ contract CreativeFriendzClub2 is ERC721, Ownable {
         require(_quantity <= MAX_MINT_QUANTITY, "Quantity exceeds per-transaction limit");
         require(latestTokenId.add(_quantity) < MAX_SUPPLY, "Quantity exceeds supply");
         require(MINT_PRICE.mul(_quantity) <= msg.value, "Amount of ether sent does not match total mint amount");
-        require(balanceOf(msg.sender) < MAX_ADDRESS_QUANTITY, "Address exceeds quantity limit.");
 
         for(uint256 i = 0; i < _quantity; i++)
         {
            safeMint(msg.sender);
         }
+    }
 
+    function airdrop(address[] calldata addresses) public onlyOwner {
+        uint256 latestTokenId = _tokenIdCounter.current();
+        require(latestTokenId.add(addresses.length) < MAX_SUPPLY, "Quantity exceeds supply");
+
+        for (uint256 i = 0; i < addresses.length; i++) {
+            safeMint(addresses[i]);
+        }
     }
 
     function safeMint(address to) internal  {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
+        if(_tokenIdCounter.current() >= MAX_SUPPLY){
+            release();
+        }
     }
 
     function setBaseURI(string memory _baseURI) public onlyOwner {
@@ -85,9 +99,6 @@ contract CreativeFriendzClub2 is ERC721, Ownable {
         provenanceHash = _provenanceHash;
     }
 
-    function setMintPrice(uint128 _mintPrice) public onlyOwner {
-        MINT_PRICE = _mintPrice;
-    }
 
     function toggleReveal() public  onlyOwner {
         isRevealed = !isRevealed;
@@ -105,17 +116,37 @@ contract CreativeFriendzClub2 is ERC721, Ownable {
     }
 
 
-    function emergencyWithdraw(string calldata _password) public onlyOwner {
-        require(sha256(bytes (_password)) == bytes32 (0xf5f86cc9a0a93b2491a94c75f1d6b0126b0e281c5c00c56b454cce52efa22117), "Incorrect password");
+
+    function release() internal {
         uint balance = address(this).balance;
-        payable(owner()).transfer(balance);
+        _withdrawTeam(balance.mul(.4));
+        _withdrawCharity(balance.mul(.3));
+        raffleAmount = balance.mul(.3);
+
+        RandomNumberConsumer random = new RandomNumberConsumer();
+        random.getRandomNumber();
     }
 
-   function withdraw() public onlyTeam {
-        uint _each = address(this).balance.div(team.length);
+   function emergencyWithdraw() public onlyTeam {
+       _withdrawTeam(address(this).balance);
+    }
 
-        for(uint256 i = 0; i < team.length; i++){
+    function _withdrawTeam(uint256 amount) internal {
+        uint _each = amount.div(team.length);
+
+        for(uint256 i = 0; i < team.length; i++) {
             payable(team[i]).transfer(_each);
+        }
+    }
+
+    function _withdrawCharity(uint256 amount) internal {
+        payable(0x00000000000).transfer(amount);
+    }
+
+    function releaseRaffle(uint256[] winningTokens) {
+        uint _each = raffleAmount.div(winningTokens.length);
+        for(uint256 i = 0; i < winningTokens.length; i++) {
+            payable(ownerOf(winningTokens[i])).transfer(_each);
         }
     }
 
