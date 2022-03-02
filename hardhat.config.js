@@ -2,13 +2,26 @@ require('dotenv').config()
 require('@nomiclabs/hardhat-ethers');
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
+require("@appliedblockchain/chainlink-plugins-fund-link");
+require("hardhat-gas-reporter");
+
+
 
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  solidity: {
+  version:  "0.8.4",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1200,
+      },
+    },
+  },
+
   networks: {
     hardhat: {
       accounts: {
@@ -22,5 +35,13 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
+  },
+  gasReporter: {
+    currency: 'USD',
+    // gasPrice: 93,
+    coinmarketcap: process.env.CMC_API_KEY,
+    gasPrice: 94,
+
+    // gasPriceApi:process.env.ETHERSCAN_API_KEY
   }
 };
