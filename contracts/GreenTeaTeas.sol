@@ -137,14 +137,14 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
         requestRaffleWinner();
     }
 
-    function requestRaffleWinner() internal returns (bytes32 requestId) {
+    function requestRaffleWinner() private returns (bytes32 requestId) {
         uint256 fee = 0.1 * 10 ** 18;  // 0.1 LINK (Varies by network) TODO To Main Net
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
         return requestRandomness(0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311, fee); // TODO To Main net
     }
 
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        randomResult = expand(randomness, RAFFLE_WINNERS); // TODO verify keys align with the keys of the owners array
+        randomResult = expand(randomness, RAFFLE_WINNERS);
         _withdrawRaffle(randomResult);
     }
 
@@ -178,7 +178,8 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
 
     function _withdrawRaffle(uint256[] memory winningTokens) private { // TODO verify memory
         uint _each = raffleAmount.div(winningTokens.length);
-        for(uint256 i = 0; i < winningTokens.length; i++) {
+        uint256 wLength = winningTokens.length;
+        for(uint256 i = 0; i < wLength; i+=1) {
             (bool sent, bytes memory data) =  ownerOf(winningTokens[i]).call{value: _each}("");
             require(sent, string(abi.encodePacked("Failed sending Ether to Raffle winner: ", winningTokens[i])));
         }

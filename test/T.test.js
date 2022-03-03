@@ -15,7 +15,7 @@ describe('BoomBabies', function () {
 
     this.beforeEach(async function() {
         const signers = await ethers.getSigners();
-        this.token = await this.Token.deploy(/*team:*/ [signers[10].address, signers[11].address],  /*whitelist:*/ [signers[1].address, signers[2].address]);
+        this.token = await this.Token.deploy(  /*whitelist:*/ [signers[1].address, signers[2].address]);
         await this.token.deployed();
     })
 
