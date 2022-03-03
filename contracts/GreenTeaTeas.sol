@@ -12,16 +12,16 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
 
-    uint256 public constant MINT_PRICE = 0.0666 ether; // TODO to non-const
-    uint256 public raffleAmount; // = 0 removed to reduce gas
+    uint256 public MINT_PRICE = 0.066 ether; // TODO to non-const
+    uint256 public raffleAmount;
     uint256[] public randomResult;
 
 
     uint128 public constant MAX_MINT_QUANTITY = 5;
     uint128 public constant MAX_SUPPLY = 1000;
     uint128 public constant RAFFLE_WINNERS = 5;
-    bool public isRevealed; // = false removed to reduce gas
-    bool public publicSale; // = false removed to reduce gas
+    bool public isRevealed;
+    bool public publicSale;
 
 
     address[] public team;
@@ -62,7 +62,7 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
         require(_exists(tokenId), "ERC721: token not found");
 
         if(! isRevealed){
-            return "https:"; // TODO possible to hardcode this to reduce gas fees.
+            return "https://some-funny-string"; // TODO possible to hardcode this to reduce gas fees.
         }
         return string(abi.encodePacked(baseURI, Strings.toString(tokenId), ".json"));
     }
@@ -105,8 +105,12 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
         }
     }
 
-    function setBaseURI(string memory _baseURI) public onlyOwner { // TODO verify memory
+    function setBaseURI(string memory _baseURI) public onlyOwner {
         baseURI = _baseURI;
+    }
+
+    function setMintPrice(uint256 _mintPrice) external onlyOwner {
+        MINT_PRICE = _mintPrice;
     }
 
     function toggleReveal() external  onlyOwner {
@@ -138,7 +142,7 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
     }
 
     function requestRaffleWinner() private returns (bytes32 requestId) {
-        uint256 fee = 0.1 * 10 ** 18;  // 0.1 LINK (Varies by network) TODO To Main Net
+        uint256 fee = 0.1 * 10 ** 18;  // 0.1 LINK (Varies by network) TODO To Main Net 2 link
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
         return requestRandomness(0x2ed0feb3e7fd2022120aa84fab1945545a9f2ffc9076fd6156fa96eaff4c1311, fee); // TODO To Main net
     }
@@ -176,7 +180,7 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
         require(sent, "Failed sending Ether to Charity");
     }
 
-    function _withdrawRaffle(uint256[] memory winningTokens) private { // TODO verify memory
+    function _withdrawRaffle(uint256[] memory winningTokens) private {
         uint _each = raffleAmount.div(winningTokens.length);
         uint256 wLength = winningTokens.length;
         for(uint256 i = 0; i < wLength; i+=1) {
