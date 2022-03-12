@@ -18,21 +18,25 @@ describe('BoomBabies', function () {
     await this.token.deployed();
   })
 
-  //
-  // it('respects max supply', async function () {
-  //   const signers = await ethers.getSigners();
-  //   this.token = await this.Token.deploy("ipfs://some-test-uri", [],   []);
-  //
-  //   await this.token.connect(signers[0]).togglePublicSale();
-  //
-  //   for(var i = 1; i < 1000; i++) {
-  //     await this.token.connect(signers[i]).mint(1, {value: parseEther('0.5').toString()});
-  //   }
-  //
-  //   await expect(
-  //       this.token.connect(signers[1001]).mint(1, {value: parseEther('0.5').toString()})
-  //   ).to.be.revertedWith("Quantity exceeds supply");
-  // });
+
+  it('respects max supply and releases after max', async function () {
+    const signers = await ethers.getSigners();
+    this.token = await this.Token.deploy([signers[0].address],   []);
+
+    await this.token.connect(signers[0]).togglePublicSale();
+
+    for(var i = 1; i < 999; i++) {
+      await this.token.connect(signers[i]).mint(1, {value: parseEther('0.5').toString()});
+    }
+    await expect(
+        this.token.connect(signers[1000]).mint(1, {value: parseEther('0.5').toString()})
+    )
+        .to.emit(this.token, 'MintComplete')
+
+    await expect(
+        this.token.connect(signers[1001]).mint(1, {value: parseEther('0.5').toString()})
+    ).to.be.revertedWith("Quantity exceeds supply");
+  });
 
 
   it("has a mint price of .066 eth", async function() {
@@ -311,42 +315,40 @@ describe('BoomBabies', function () {
 
 
 
-
-  it("releases after full mint", async function () {
-    const signers = await ethers.getSigners();
-    const nft = await this.Token.deploy([signers[2].address], []);
-    await nft.deployed();
-
-    var addresses = [];
-    for(let i = 0; i < 14; i++) {
-      addresses.push(signers[3].address);
-    }
-
-    await nft.connect(signers[0]).togglePublicSale();
-    await nft.connect(signers[5]).mint(5, {value: parseEther('0.5').toString()});
-
-    await expect( nft.connect(signers[0]).airdrop(addresses))
-        .to.emit(nft, 'MintComplete')
-
-  })
+  //
+  // it("releases after full mint", async function () {
+  //   const signers = await ethers.getSigners();
+  //   const nft = await this.Token.deploy([signers[2].address], []);
+  //   await nft.deployed();
+  //
+  //   var addresses = [];
+  //   for(let i = 0; i < 14; i++) {
+  //     addresses.push(signers[3].address);
+  //   }
+  //
+  //   await nft.connect(signers[0]).togglePublicSale();
+  //   await nft.connect(signers[5]).mint(5, {value: parseEther('0.5').toString()});
+  //
+  //   await expect( nft.connect(signers[0]).airdrop(addresses))
+  //       .to.emit(nft, 'MintComplete')
+  //
+  // })
 
   it("transfers 40% to the team", async function() {
     const signers = await ethers.getSigners();
     const nft = await this.Token.deploy([signers[2].address, signers[9].address], []);
     await nft.deployed();
 
-    var addresses = [];
-    for(let i = 0; i < 13; i++) {
-      addresses.push(signers[3].address);
-    }
 
     await nft.connect(signers[0]).togglePublicSale();
-    await nft.connect(signers[5]).mint(5, {value: parseEther('0.5').toString()});
-
+    await nft.connect(signers[0]).airdrop(signers.slice(0, 250).map(s => s.address));
+    await nft.connect(signers[0]).airdrop(signers.slice(250, 500).map(s => s.address));
+    await nft.connect(signers[0]).airdrop(signers.slice(500, 750).map(s => s.address));
+    await nft.connect(signers[0]).airdrop(signers.slice(750, 997).map(s => s.address));
 
     // 0.5E * 0.4 / 2
 
-    await expect(() => nft.connect(signers[0]).airdrop(addresses)).to.changeEtherBalances([signers[2], signers[9]], [parseEther('0.1').toString(), parseEther('0.1').toString()]);
+    await expect(() => nft.connect(signers[0]).mint(1, {value: parseEther('0.5').toString()})).to.changeEtherBalances([signers[2], signers[9]], [parseEther('0.1').toString(), parseEther('0.1').toString()]);
 
   })
 

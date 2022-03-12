@@ -12,13 +12,13 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
     using Counters for Counters.Counter;
     using SafeMath for uint256;
 
-    uint256 public MINT_PRICE = 0.066 ether; // TODO to non-const
+    uint256 public MINT_PRICE = 0.005 ether; // TODO to 0.066
     uint256 public raffleAmount;
     uint256[] public randomResult;
 
 
     uint128 public constant MAX_MINT_QUANTITY = 5;
-    uint128 public constant MAX_SUPPLY = 1000;
+    uint128 public constant MAX_SUPPLY = 100; // TODO to 1k
     uint128 public constant RAFFLE_WINNERS = 5;
     bool public isRevealed;
     bool public publicSale;
@@ -33,7 +33,7 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
 
 
     constructor(address[] memory _team, address[] memory _whiteList)
-        ERC721("GreenTeaTeas", "GTT3")
+        ERC721("GreenTeaTeas", "GTTF")
         VRFConsumerBase(
         // @see https://docs.chain.link/docs/vrf-contracts/v1/
             0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B, // VRF Coordinator TODO To MainNet - 0xf0d54349aDdcf704F77AE15b96510dEA15cb7952
@@ -88,7 +88,6 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
         }
     }
 
-    //A1E8BF5F8C2484A0732CB3C3F415308C890AF0C76E0BD50CB8E3E229A1D82212
     function preMint(address to) private {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
@@ -138,7 +137,7 @@ contract GreenTeaTeas is ERC721, Ownable, VRFConsumerBase {
         _withdrawTeam(balance.div(100).mul(40));
         _withdrawCharity(balance.div(100).mul(30));
         raffleAmount = balance.div(100).mul(30);
-        requestRaffleWinner();
+//        requestRaffleWinner(); // TODO TEST enable
     }
 
     function requestRaffleWinner() private returns (bytes32 requestId) {

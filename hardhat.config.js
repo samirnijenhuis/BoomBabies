@@ -25,7 +25,7 @@ module.exports = {
   networks: {
     hardhat: {
       accounts: {
-        // count: 1050
+        // count: 1300
       }
     },
     rinkeby:{
@@ -40,7 +40,7 @@ module.exports = {
     currency: 'USD',
     // gasPrice: 93,
     coinmarketcap: process.env.CMC_API_KEY,
-    gasPrice: 94,
+    gasPrice: 40,
 
     // gasPriceApi:process.env.ETHERSCAN_API_KEY
   }
